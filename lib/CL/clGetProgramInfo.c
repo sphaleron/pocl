@@ -95,6 +95,13 @@ POname(clGetProgramInfo)(cl_program program,
         *param_value_size_ret = value_size;
       return CL_SUCCESS;
     }
+
+  case CL_PROGRAM_NUM_KERNELS:
+    {
+      int num_kernels = pocl_llvm_get_kernel_names(program, NULL, 0);
+      POCL_RETURN_GETINFO(size_t, num_kernels);
+    }
+
   default:
     break;
   }
