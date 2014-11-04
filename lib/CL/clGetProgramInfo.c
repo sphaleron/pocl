@@ -102,6 +102,42 @@ POname(clGetProgramInfo)(cl_program program,
       POCL_RETURN_GETINFO(size_t, num_kernels);
     }
 
+  case CL_PROGRAM_KERNEL_NAMES:
+    {
+      size_t value_size = 0;
+      int num_kernels;
+      const char** knames;
+
+      num_kernels = pocl_llvm_get_kernel_names(program, NULL, 0);
+      knames = (const char**) malloc(num_kernels*sizeof(const char *));
+      if (knames == NULL && num_kernels > 0)
+        return CL_OUT_OF_HOST_MEMORY;
+
+      num_kernels = pocl_llvm_get_kernel_names(program, knames, num_kernels);
+      for (i = 0; i < num_kernels; i++)
+        value_size += strlen(knames[i]) + 1;
+      if (value_size == 0)
+         value_size = 1; /* no kernels, return an empty string */
+
+      if (param_value)
+      {
+        if (param_value_size < value_size) return CL_INVALID_VALUE;
+        char* target = (char*) param_value;
+        target[0] = '\0';
+        if (num_kernels > 0)
+           strcpy(target, knames[0]);
+        for (i = 1; i < num_kernels; i++)
+          {
+            strcat(target, ";");
+            strcat(target, knames[i]);
+          }
+      }
+      if (param_value_size_ret)
+        *param_value_size_ret = value_size;
+      POCL_MEM_FREE(knames);
+      return CL_SUCCESS;
+    }
+
   default:
     break;
   }
